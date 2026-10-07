@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1726">
+<meta name="description" content="해외 주요 매체의 헤드라인을 날짜별로 모아 보고, 원화 환율을 함께 확인하는 뉴스 페이지.">
+<title>월드 브리핑</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230E1726'/%3E%3Cpath d='M8 22V10h4.2c2.6 0 4 1.2 4 3.3 0 1.5-.8 2.5-2.1 2.9L17 22h-2.6l-2.4-5.3h-1.4V22z M10.6 14.8h1.5c1 0 1.6-.5 1.6-1.4s-.6-1.3-1.6-1.3h-1.5z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --ink:#0E1726; --text:#1B2433; --muted:#5B6577; --ground:#F2F3F5; --paper:#fff; --rule:#DADDE3;
+  --up:#D92D20; --down:#1D5FD6; --flat:#5B6577; --note:#FFF1B8;
+  --st:env(safe-area-inset-top); --sb:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box}
+html{color-scheme:light;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--text);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  word-break:keep-all;line-height:1.5}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.serif{font-family:"Noto Serif KR","Apple SD Gothic Neo",serif}
+.wrap{max-width:1040px;margin:0 auto}
+
+/* 머리글 */
+.mast{background:var(--ink);color:#fff;padding:calc(var(--st) + 14px) 0 14px}
+.mast .wrap{padding:0 16px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.mast h1{margin:0;font-size:clamp(26px,6vw,34px);line-height:1.1;font-weight:900;letter-spacing:-.01em}
+.mast p{margin:4px 0 0;font-size:13px;color:#B5BDCC}
+.mast time{font-size:13px;color:#B5BDCC;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.note{background:var(--note);color:#3A2F00;font-size:14px;padding:10px 0}
+.note .wrap{padding:0 16px}
+
+/* 환율 */
+.fx{background:var(--paper);border-bottom:1px solid var(--rule)}
+.fx-row{display:flex;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.fx-row::-webkit-scrollbar{display:none}
+.fx-cell{flex:1 0 156px;scroll-snap-align:start;padding:12px 16px 10px;border-right:1px solid var(--rule)}
+.fx-cell:last-child{border-right:0}
+.fx-name{font-size:13px;color:var(--muted);white-space:nowrap}
+.fx-val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.25}
+.fx-chg{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.fx-chg.up{color:var(--up)} .fx-chg.down{color:var(--down)} .fx-chg.flat{color:var(--flat)}
+.fx svg{display:block;width:100%;height:28px;margin-top:6px}
+.fx-note{padding:6px 16px 10px;font-size:12px;color:var(--muted)}
+
+/* 날짜 */
+.days{position:sticky;top:0;z-index:5;background:var(--ground);border-bottom:1px solid var(--rule)}
+.days-row{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;scrollbar-width:none}
+.days-row::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;min-width:84px;max-width:128px;padding:8px 12px;border-radius:10px;text-align:left;background:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule);transition:background-color .15s,color .15s}
+.day b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+.day span{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day[aria-current="date"]{background:var(--ink);color:#fff;box-shadow:none}
+.day[aria-current="date"] span{color:#B5BDCC}
+@media (hover:hover){.day:hover:not([aria-current="date"]){background:#E7E9EE}}
+
+/* 필터 */
+.filters{padding:14px 16px 4px}
+.kws{display:flex;gap:8px;align-items:center;margin:0 -16px 10px;padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.kws::-webkit-scrollbar{display:none}
+.kws>span{flex:0 0 auto;font-size:13px;color:var(--muted);margin-right:2px}
+.kw{flex:0 0 auto;min-height:36px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:600;background:var(--paper);box-shadow:inset 0 0 0 1px var(--rule)}
+.kw[aria-pressed="true"]{background:var(--ink);color:#fff;box-shadow:none}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--rule)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{min-height:44px;padding:0 14px;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;position:relative}
+.tab small{font-size:12px;font-variant-numeric:tabular-nums;margin-left:4px;font-weight:500}
+.tab[aria-pressed="true"]{color:var(--ink)}
+.tab[aria-pressed="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:3px;background:var(--ink);border-radius:3px 3px 0 0}
+
+/* 기사 */
+main{padding:0 16px calc(var(--sb) + 40px)}
+.lead{display:grid;gap:16px;padding:20px 0 22px;border-bottom:1px solid var(--rule)}
+.lead figure{margin:0;border-radius:10px;overflow:hidden;background:#DCE0E8;aspect-ratio:16/9}
+.lead img{display:block;width:100%;height:100%;object-fit:cover}
+.lead h2{margin:0 0 10px;font-size:clamp(24px,5.6vw,34px);line-height:1.28;font-weight:900;letter-spacing:-.015em;text-wrap:balance}
+.lead h2 a{text-decoration:none}
+.lead h2 a:hover{text-decoration:underline;text-underline-offset:4px}
+.sum{margin:0 0 10px;font-size:16px;line-height:1.65;color:#2B3445;text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:13px;color:var(--muted)}
+.meta b{color:var(--text);font-weight:650}
+.meta time{font-variant-numeric:tabular-nums}
+.meta .go{margin-left:auto;font-weight:600;color:var(--text);text-underline-offset:3px}
+.feed{list-style:none;margin:0;padding:0;display:grid;gap:0 32px}
+.item{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--rule)}
+.item .body{flex:1;min-width:0}
+.item h3{margin:0 0 6px;font-size:17px;line-height:1.42;font-weight:650;text-wrap:pretty;overflow-wrap:anywhere}
+.item h3 a{text-decoration:none}
+.item h3 a:hover{text-decoration:underline;text-underline-offset:3px}
+.item .sum{font-size:14px;line-height:1.55;color:var(--muted);-webkit-line-clamp:2;margin-bottom:8px}
+.item figure{margin:0;flex:0 0 92px;height:92px;border-radius:8px;overflow:hidden;background:#DCE0E8}
+.item img{display:block;width:100%;height:100%;object-fit:cover}
+.empty{padding:48px 0;text-align:center;color:var(--muted)}
+.empty h2{margin:0 0 8px;font-size:20px;color:var(--text)}
+.empty ol{display:inline-block;text-align:left;margin:12px 0 0;padding-left:20px;line-height:1.8}
+footer .wrap{padding:0 16px}
+footer{padding:8px 0 calc(var(--sb) + 36px);font-size:12.5px;color:var(--muted)}
+footer p{margin:0 0 8px;max-width:60em}
+
+@media (min-width:760px){
+  .lead{grid-template-columns:1.25fr 1fr;align-items:center;gap:28px}
+  .feed{grid-template-columns:1fr 1fr}
+  .fx-cell{padding:14px 16px 12px}
+}
+@media (prefers-reduced-motion:reduce){.day{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div>
+      <h1 class="serif">월드 브리핑</h1>
+      <p>해외 뉴스와 환율 · 한국 시간 기준</p>
+    </div>
+    <time id="updated"></time>
+  </div>
+</header>
+
+<div class="note" id="note" hidden><div class="wrap" id="noteText"></div></div>
+
+<section class="fx" aria-label="원화 환율" id="fx" hidden>
+  <div class="wrap">
+    <div class="fx-row" id="fxRow"></div>
+    <p class="fx-note" id="fxNote"></p>
+  </div>
+</section>
+
+<nav class="days" aria-label="날짜 선택" id="days" hidden>
+  <div class="wrap"><div class="days-row" id="daysRow"></div></div>
+</nav>
+
+<div class="wrap">
+  <section class="filters" id="filters" hidden>
+    <div class="kws" id="kws"></div>
+    <div class="tabs" id="tabs" role="group" aria-label="분야"></div>
+  </section>
+
+  <main>
+    <p class="empty" id="loading">불러오는 중…</p>
+    <article class="lead" id="lead" hidden></article>
+    <ul class="feed" id="feed"></ul>
+    <div class="empty" id="empty" hidden></div>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p id="srcLine"></p>
+    <p>헤드라인과 요약은 각 매체가 공개한 RSS에서 가져옵니다. 기사의 저작권은 각 매체에 있고, 제목을 누르면 원문으로 이동합니다. 기사는 영어 원문 그대로입니다.</p>
+    <p>환율은 중앙은행 기준의 일일 참고값이며 실시간 시세가 아닙니다. 매매·송금에는 해당 금융기관의 환율을 확인하세요.</p>
+  </div>
+</footer>
+
+<script>
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");
+const BASE = DEMO ? "sample/" : "data/";
+const CATS = [["all", "전체"], ["world", "세계"], ["business", "경제"], ["asia", "아시아"], ["tech", "기술"]];
+const WD = ["일", "월", "화", "수", "목", "금", "토"];
+const TZ = "Asia/Seoul";
+const fmtTime = new Intl.DateTimeFormat("ko-KR", {timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false});
+const fmtUpd = new Intl.DateTimeFormat("ko-KR", {timeZone: TZ, month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false});
+const fmtNum = new Intl.NumberFormat("ko-KR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const $ = id => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let idx = null, day = null, date = null, cat = "all", kw = "", fxSource = "", srcFeeds = "";
+
+async function getJson(path) {
+  const r = await fetch(BASE + path, {cache: "no-cache"});
+  if (!r.ok) throw new Error(path + " " + r.status);
+  return r.json();
+}
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const safeHref = u => /^https?:\/\//.test(u || "") ? u : "#";
+const safeImg = u => /^(https:\/\/|data:image\/)/.test(u || "") ? u : "";
+
+function dateParts(d) {
+  const [y, m, dd] = d.split("-").map(Number);
+  return {md: `${m}/${dd}`, wd: WD[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]};
+}
+
+/* URL 상태: #d=2026-10-06&c=business&k=Iran */
+function readState() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  return {d: p.get("d"), c: p.get("c") || "all", k: p.get("k") || ""};
+}
+function writeState() {
+  const p = new URLSearchParams();
+  if (date) p.set("d", date);
+  if (cat !== "all") p.set("c", cat);
+  if (kw) p.set("k", kw);
+  history.replaceState(null, "", location.pathname + location.search + (p.toString() ? "#" + p : ""));
+}
+
+/* 환율 */
+function sparkline(series, cls) {
+  const w = 120, h = 28, pad = 3, v = series.map(s => s.v);
+  const mn = Math.min(...v), mx = Math.max(...v), r = (mx - mn) || 1;
+  const pts = v.map((x, i) => [pad + (i / ((v.length - 1) || 1)) * (w - pad * 2), h - pad - ((x - mn) / r) * (h - pad * 2)]);
+  const last = pts[pts.length - 1];
+  const color = cls === "up" ? "var(--up)" : cls === "down" ? "var(--down)" : "var(--flat)";
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true" focusable="false">` +
+    `<polyline points="${pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}" fill="none" stroke="#9AA3B2" stroke-width="1.5" vector-effect="non-scaling-stroke"/>` +
+    `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3" fill="${color}"/></svg>`;
+}
+function renderFx(fx) {
+  if (!fx || !fx.pairs || !fx.pairs.length) return;
+  const row = $("fxRow"); row.textContent = "";
+  fx.pairs.forEach(p => {
+    const cls = p.change > 0 ? "up" : p.change < 0 ? "down" : "flat";
+    const glyph = p.change > 0 ? "▲" : p.change < 0 ? "▼" : "–";
+    const cell = el("div", "fx-cell");
+    cell.append(el("div", "fx-name", `${p.label} ${p.unit > 1 ? p.unit : ""}${p.code}`.replace("  ", " ")));
+    cell.append(el("div", "fx-val", fmtNum.format(p.value) + "원"));
+    cell.append(el("div", "fx-chg " + cls, `${glyph} ${fmtNum.format(Math.abs(p.change))} (${fmtNum.format(Math.abs(p.pct))}%)`));
+    const holder = el("div"); holder.innerHTML = sparkline(p.series, cls); cell.append(holder.firstChild);
+    row.append(cell);
+  });
+  const [y, m, d] = fx.asof.split("-").map(Number);
+  $("fxNote").textContent = `${y}년 ${m}월 ${d}일 기준 · ▲는 원화 약세(환율 상승)`;
+  fxSource = `환율 출처: ${fx.source}. 그래프는 최근 ${fx.pairs[0].series.length}개 영업일입니다.`;
+  $("srcLine").textContent = [fxSource, srcFeeds].filter(Boolean).join(" ");
+  $("fx").hidden = false;
+}
+
+/* 날짜 */
+function renderDays() {
+  const row = $("daysRow"); row.textContent = "";
+  idx.dates.forEach(d => {
+    const {md, wd} = dateParts(d.date);
+    const b = el("button", "day");
+    b.type = "button";
+    b.append(el("b", "", `${md} ${wd}`), el("span", "", d.top && d.top.length ? d.top[0] : `${d.count}건`));
+    if (d.date === date) b.setAttribute("aria-current", "date");
+    b.setAttribute("aria-label", `${md} ${wd}요일 기사 ${d.count}건${d.top && d.top.length ? ", 주요 키워드 " + d.top[0] : ""}`);
+    b.onclick = () => { if (d.date !== date) { kw = ""; loadDay(d.date); } };
+    row.append(b);
+  });
+  $("days").hidden = false;
+}
+
+/* 본문 */
+function matches(it) {
+  if (cat !== "all" && !it.cats.includes(cat)) return false;
+  if (kw && !it.title.toLowerCase().includes(kw.toLowerCase())) return false;
+  return true;
+}
+function metaRow(it, withLink) {
+  const m = el("div", "meta");
+  m.append(el("b", "", it.source));
+  const t = el("time", "", fmtTime.format(new Date(it.published)));
+  t.dateTime = it.published; m.append(t);
+  if (withLink) {
+    const a = el("a", "go", "원문 보기");
+    a.href = safeHref(it.link); a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.setAttribute("aria-label", `${it.title} 원문 보기, 새 탭`);
+    m.append(a);
+  }
+  return m;
+}
+function image(it, w, h) {
+  const src = safeImg(it.img);
+  if (!src) return null;
+  const f = el("figure"), i = new Image();
+  i.src = src; i.alt = ""; i.width = w; i.height = h; i.loading = "lazy"; i.decoding = "async"; i.referrerPolicy = "no-referrer";
+  i.addEventListener("error", () => f.remove());
+  f.append(i); return f;
+}
+function renderDay() {
+  $("loading").hidden = true;
+  const all = day.items;
+  // 키워드
+  const kws = $("kws"); kws.textContent = "";
+  if (day.keywords && day.keywords.length) {
+    kws.append(el("span", "", "이날의 키워드"));
+    day.keywords.forEach(k => {
+      const b = el("button", "kw", k); b.type = "button";
+      b.setAttribute("aria-pressed", String(k.toLowerCase() === kw.toLowerCase()));
+      b.onclick = () => { kw = (kw.toLowerCase() === k.toLowerCase()) ? "" : k; writeState(); renderDay(); };
+      kws.append(b);
+    });
+  }
+  // 분야 탭
+  const tabs = $("tabs"); tabs.textContent = "";
+  CATS.forEach(([id, name]) => {
+    const n = id === "all" ? all.length : all.filter(i => i.cats.includes(id)).length;
+    if (id !== "all" && n === 0) return;
+    const b = el("button", "tab", name); b.type = "button";
+    b.append(el("small", "", String(n)));
+    b.setAttribute("aria-pressed", String(id === cat));
+    b.onclick = () => { cat = id; writeState(); renderDay(); };
+    tabs.append(b);
+  });
+  $("filters").hidden = false;
+
+  const list = all.filter(matches);
+  const lead = $("lead"), feed = $("feed"), empty = $("empty");
+  lead.textContent = ""; feed.textContent = "";
+  if (!list.length) {
+    lead.hidden = true; empty.hidden = false; empty.textContent = "";
+    empty.append(el("h2", "", "조건에 맞는 기사가 없어요"));
+    empty.append(el("p", "", "분야나 키워드 선택을 바꿔 보세요."));
+    return;
+  }
+  empty.hidden = true;
+  const leadItem = list.slice(0, 6).find(i => safeImg(i.img)) || list[0];
+  const rest = list.filter(i => i !== leadItem);
+
+  const img = image(leadItem, 640, 360);
+  if (img) lead.append(img);
+  const txt = el("div");
+  const h = el("h2", "serif"), a = el("a", "", leadItem.title);
+  a.href = safeHref(leadItem.link); a.target = "_blank"; a.rel = "noopener noreferrer"; h.append(a);
+  txt.append(h);
+  if (leadItem.summary) txt.append(el("p", "sum", leadItem.summary));
+  txt.append(metaRow(leadItem, true));
+  lead.append(txt); lead.hidden = false;
+
+  rest.forEach(it => {
+    const li = el("li", "item"), body = el("div", "body");
+    const h3 = el("h3"), link = el("a", "", it.title);
+    link.href = safeHref(it.link); link.target = "_blank"; link.rel = "noopener noreferrer"; h3.append(link);
+    body.append(h3);
+    if (it.summary) body.append(el("p", "sum", it.summary));
+    body.append(metaRow(it, false));
+    li.append(body);
+    const th = image(it, 92, 92); if (th) li.append(th);
+    feed.append(li);
+  });
+}
+
+async function loadDay(d) {
+  date = d;
+  try { day = await getJson(`days/${d}.json`); }
+  catch (e) { showError("선택한 날짜의 기사를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요."); return; }
+  writeState(); renderDays(); renderDay();
+}
+
+function showError(msg, steps) {
+  $("loading").hidden = true; $("lead").hidden = true; $("feed").textContent = "";
+  const e = $("empty"); e.hidden = false; e.textContent = "";
+  e.append(el("h2", "", msg));
+  if (steps) { const ol = el("ol"); steps.forEach(s => ol.append(el("li", "", s))); e.append(ol); }
+}
+
+function setNote(msg) { $("noteText").textContent = msg; $("note").hidden = !msg; }
+
+async function init() {
+  const st = readState(); cat = CATS.some(c => c[0] === st.c) ? st.c : "all"; kw = st.k;
+  try { idx = await getJson("index.json"); }
+  catch (e) {
+    showError("아직 수집된 기사가 없어요", [
+      "저장소의 Actions 탭을 엽니다.",
+      "왼쪽에서 ‘뉴스 갱신’을 고르고 Run workflow를 누릅니다.",
+      "1~2분 뒤 이 페이지를 새로고침하면 기사가 나타납니다."
+    ]);
+    return;
+  }
+  getJson("fx.json").then(renderFx).catch(() => {});
+
+  const upd = new Date(idx.updated);
+  $("updated").textContent = `${fmtUpd.format(upd)} 갱신`;
+  $("updated").dateTime = idx.updated;
+  if (DEMO || idx.sample) setNote("데모 데이터입니다. 실제 뉴스와 환율이 아닙니다.");
+  else if (Date.now() - upd.getTime() > 6 * 3600 * 1000) setNote("자동 수집이 6시간 넘게 멈춘 것 같아요. 저장소의 Actions 탭에서 ‘뉴스 갱신’이 켜져 있는지 확인해 주세요.");
+
+  const known = idx.dates.map(d => d.date);
+  const start = known.includes(st.d) ? st.d : known[0];
+  if (!start) { showError("아직 수집된 기사가 없어요"); return; }
+  await loadDay(start);
+  const cur = $("daysRow").querySelector('[aria-current="date"]');
+  if (cur) cur.scrollIntoView({inline: "center", block: "nearest", behavior: reduce ? "auto" : "smooth"});
+
+  const ok = (idx.feeds || []).filter(f => f.ok), bad = (idx.feeds || []).filter(f => !f.ok);
+  const names = [...new Set(ok.map(f => f.source))];
+  srcFeeds = names.length
+    ? `이번 수집에 응답한 매체: ${names.join(", ")}` + (bad.length ? ` (응답하지 않은 피드 ${bad.length}곳)` : "") + "."
+    : "";
+  $("srcLine").textContent = [fxSource, srcFeeds].filter(Boolean).join(" ");
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[
+  {"source": "NPR", "cat": "world", "url": "https://feeds.npr.org/1004/rss.xml"},
+  {"source": "NPR", "cat": "business", "url": "https://feeds.npr.org/1006/rss.xml"},
+  {"source": "NPR", "cat": "tech", "url": "https://feeds.npr.org/1019/rss.xml"},
+
+  {"source": "BBC", "cat": "world", "url": "https://feeds.bbci.co.uk/news/world/rss.xml"},
+  {"source": "BBC", "cat": "asia", "url": "https://feeds.bbci.co.uk/news/world/asia/rss.xml"},
+  {"source": "BBC", "cat": "business", "url": "https://feeds.bbci.co.uk/news/business/rss.xml"},
+  {"source": "BBC", "cat": "tech", "url": "https://feeds.bbci.co.uk/news/technology/rss.xml"},
+
+  {"source": "The Guardian", "cat": "world", "url": "https://www.theguardian.com/world/rss"},
+  {"source": "The Guardian", "cat": "business", "url": "https://www.theguardian.com/business/rss"},
+  {"source": "The Guardian", "cat": "tech", "url": "https://www.theguardian.com/technology/rss"},
+
+  {"source": "NYT", "cat": "world", "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"},
+  {"source": "NYT", "cat": "asia", "url": "https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml"},
+  {"source": "NYT", "cat": "business", "url": "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml"},
+  {"source": "NYT", "cat": "tech", "url": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"},
+
+  {"source": "Al Jazeera", "cat": "world", "url": "https://www.aljazeera.com/xml/rss/all.xml"},
+
+  {"source": "DW", "cat": "world", "url": "https://rss.dw.com/rdf/rss-en-world"},
+  {"source": "DW", "cat": "business", "url": "https://rss.dw.com/rdf/rss-en-bus"}
+]
