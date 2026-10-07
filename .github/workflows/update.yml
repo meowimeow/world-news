@@ -1,0 +1,52 @@
+name: 뉴스 갱신
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # 매시 17분 (UTC). GitHub 사정으로 몇 분~수십 분 늦을 수 있어요
+  workflow_dispatch:        # Actions 탭에서 직접 실행 버튼으로도 돌릴 수 있어요
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: update-news
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 뉴스와 환율 수집
+        run: python scripts/fetch_news.py
+
+      - name: 변경 사항 저장
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "바뀐 내용이 없습니다."
+            exit 0
+          fi
+          git commit -m "data: $(date -u +'%Y-%m-%d %H:%M') UTC"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && break
+            sleep 5
+          done
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: 사이트 다시 배포 요청
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "배포 요청은 건너뜁니다(자동 배포가 처리해요)."
